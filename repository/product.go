@@ -90,11 +90,36 @@ func (r *ProductRepository) Delete(id int64) error {
 
 // return all products below their threshold
 
-
 func (r *ProductRepository) GetLowStock() ([]models.Product, error) {
 
 	rows, err := r.db.Query(`
-	
+		SELECT id, category_id, name, price, stock, low_stock_threshold, created_at
+		FROM products
+		WHERE stock <= low_stock-threshold
+		ORDER BY stock ASC
 
 	`)
+
+	if err != nil {
+		return nil, fmt.Errorf("querying low stock %w", err)
+	}
+
+	defer rows.Close()
+
+	var products []models.Product
+
+	for rows.Next() {
+
+		var p models.Product
+		err := rows.Scan(&p.ID, &p.CategoryID, &p.Name, &p.Price, &p.Stock, &p.LowStockThreshold, &p.CategoryID)
+
+
+		if err != nil {
+			return nil, fmt.Errorf("scanning product: %w", err)
+		}
+
+		products = append(products, p)
+	}
+
+	return products, nil
 }
